@@ -19,6 +19,20 @@ from gamification import GamificationManager
 from thingsboard_client import ThingsBoardClient
 from data_processor import DataProcessor
 from thingsboard_sync import ThingsBoardSyncService
+from ui.components import (
+    apply_professional_theme, professional_header, professional_subheader,
+    status_pill, professional_metric_card, professional_navigation, 
+    professional_info_box, create_professional_chart, professional_data_table
+)
+from ui.theme import COLORS
+
+# Page configuration - MUST be first st.* call
+st.set_page_config(
+    page_title="Energy Management Platform",
+    page_icon="⚡",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Initialize session state
 if 'db_manager' not in st.session_state:
@@ -43,51 +57,53 @@ if 'thingsboard_sync' not in st.session_state:
         st.session_state.thingsboard_client
     )
 
-# Page configuration
-st.set_page_config(
-    page_title="Neighborhood Energy Tracker",
-    page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page configuration moved to top of file
 
 def main():
-    st.title("⚡ Neighborhood Energy Tracker")
-    st.markdown("Python-Powered Insights, Notifications & Sustainable Living")
+    # Apply professional theme
+    apply_professional_theme()
     
-    # Sidebar navigation
-    st.sidebar.title("Navigation")
-    page = st.sidebar.radio(
-        "Go to",
-        ["🏠 Dashboard", "📊 Analytics", "🤖 AI Recommendations", "📱 Manual Input", "🎮 Gamification", "🏆 Neighborhood", "🔗 Hardware Simulator", "⚙️ Settings"]
-    )
+    professional_header("Energy Management Platform", "Enterprise energy monitoring and optimization dashboard")
     
-    if page == "🏠 Dashboard":
+    # Professional navigation
+    pages = [
+        {"name": "dashboard", "label": "Dashboard"},
+        {"name": "analytics", "label": "Analytics"},
+        {"name": "ai_recommendations", "label": "AI Insights"},
+        {"name": "manual_input", "label": "Data Entry"},
+        {"name": "gamification", "label": "Performance Tracking"},
+        {"name": "neighborhood", "label": "Benchmarking"},
+        {"name": "hardware_simulator", "label": "Device Simulator"},
+        {"name": "settings", "label": "Settings"}
+    ]
+    
+    page = professional_navigation(pages, "dashboard")
+    
+    if page == "dashboard":
         dashboard_page()
-    elif page == "📊 Analytics":
+    elif page == "analytics":
         analytics_page()
-    elif page == "🤖 AI Recommendations":
+    elif page == "ai_recommendations":
         ai_recommendations_page()
-    elif page == "📱 Manual Input":
+    elif page == "manual_input":
         manual_input_page()
-    elif page == "🎮 Gamification":
+    elif page == "gamification":
         gamification_page()
-    elif page == "🏆 Neighborhood":
+    elif page == "neighborhood":
         neighborhood_page()
-    elif page == "🔗 Hardware Simulator":
+    elif page == "hardware_simulator":
         hardware_simulator_page()
-    elif page == "⚙️ Settings":
+    elif page == "settings":
         settings_page()
 
 def dashboard_page():
     # Enhanced header with sync button
     col_header1, col_header2 = st.columns([3, 1])
     with col_header1:
-        st.header("🏠 Real-Time Energy Dashboard")
-        st.markdown("*Live insights into your energy consumption patterns*")
+        professional_header("Real-Time Energy Dashboard", "Live insights into your energy consumption patterns")
     
     with col_header2:
-        if st.button("🔄 Sync ThingsBoard", help="Pull latest data from ThingsBoard"):
+        if st.button("Sync ThingsBoard", help="Pull latest data from ThingsBoard", type="primary"):
             with st.spinner("Syncing data..."):
                 result = st.session_state.thingsboard_sync.perform_sync()
                 if result['success']:
@@ -98,49 +114,53 @@ def dashboard_page():
                     st.error(f"Sync failed: {result.get('error', 'Unknown error')}")
     
     # Enhanced status indicators with colors and hover effects
-    st.subheader("📊 System Status")
+    professional_subheader("System Status", "Current status of all connected systems and services")
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         mqtt_status = st.session_state.mqtt_client.is_connected()
-        mqtt_color = "normal" if mqtt_status else "inverse"
-        st.metric("🌐 MQTT", "✅ Connected" if mqtt_status else "❌ Disconnected")
+        professional_metric_card("MQTT Connection", "Connected" if mqtt_status else "Disconnected")
     
     with col2:
         tb_status = st.session_state.thingsboard_client.check_connection()
-        st.metric("📈 ThingsBoard", "✅ Connected" if tb_status else "❌ Disconnected")
+        professional_metric_card("ThingsBoard", "Connected" if tb_status else "Disconnected")
     
     with col3:
         current_consumption = st.session_state.data_processor.get_current_consumption()
-        st.metric("⚡ Current Usage", f"{current_consumption:.2f} kWh")
+        professional_metric_card("Current Usage", f"{current_consumption:.2f} kWh")
     
     with col4:
         daily_total = st.session_state.data_processor.get_daily_total()
         yesterday_total = st.session_state.data_processor.get_daily_total(datetime.now().date() - timedelta(days=1))
         daily_delta = daily_total - yesterday_total if yesterday_total > 0 else None
-        st.metric("📅 Today's Total", f"{daily_total:.2f} kWh", delta=f"{daily_delta:.2f} kWh" if daily_delta else None)
+        professional_metric_card("Today's Total", f"{daily_total:.2f} kWh", delta=f"{daily_delta:.2f} kWh" if daily_delta else None)
     
     with col5:
         weekly_total = st.session_state.data_processor.get_weekly_total()
         estimated_cost = daily_total * ENERGY_COST_PER_KWH
-        st.metric("💰 Today's Cost", f"${estimated_cost:.2f}")
+        professional_metric_card("Today's Cost", f"${estimated_cost:.2f}")
     
     # Enhanced interactive consumption chart with tabs
-    st.subheader("📈 Interactive Energy Consumption")
+    professional_subheader("Energy Consumption Analysis", "Interactive charts and trends for different time periods")
     
-    # Time period selection
-    time_tab1, time_tab2, time_tab3, time_tab4 = st.tabs(["📈 Last 24 Hours", "📊 Last 7 Days", "📅 Last 30 Days", "🔍 Custom Range"])
+    # Time period selection with session state to track selection
+    if 'selected_time_tab' not in st.session_state:
+        st.session_state.selected_time_tab = 0
     
-    with time_tab1:
+    time_options = ["Last 24 Hours", "Last 7 Days", "Last 30 Days", "Custom Range"]
+    selected_tab = st.selectbox("Time Period", time_options, index=st.session_state.selected_time_tab)
+    st.session_state.selected_time_tab = time_options.index(selected_tab)
+    
+    if selected_tab == "Last 24 Hours":
         hours_back = 24
         chart_title = "24-Hour Energy Consumption Trend"
-    with time_tab2:
+    elif selected_tab == "Last 7 Days":
         hours_back = 168  # 7 days
         chart_title = "7-Day Energy Consumption Overview"
-    with time_tab3:
+    elif selected_tab == "Last 30 Days":
         hours_back = 720  # 30 days  
         chart_title = "30-Day Energy Consumption Analysis"
-    with time_tab4:
+    else:  # Custom Range
         col_date1, col_date2 = st.columns(2)
         with col_date1:
             start_date = st.date_input("Start Date", datetime.now() - timedelta(days=7))
@@ -232,39 +252,41 @@ def dashboard_page():
         # Add range slider to main chart
         fig.update_xaxes(rangeslider_visible=True, row=1, col=1)
         
-        st.plotly_chart(fig, use_container_width=True)
+        fig = create_professional_chart(fig, "Daily Energy Consumption")
+        st.plotly_chart(fig, width="stretch")
     else:
-        st.warning("🚨 No recent energy data available")
+        professional_info_box("No recent energy data available. Please add data to begin monitoring your energy consumption.", "warning")
         
         # Helpful suggestions
-        st.info("💡 **Get Started with Data:**")
+        professional_info_box("**Get Started with Data Collection:**", "info")
         col_suggest1, col_suggest2, col_suggest3 = st.columns(3)
         with col_suggest1:
-            st.markdown("**📱 Manual Input**\nAdd energy data manually from your meter readings")
+            st.markdown("**Manual Input**\nAdd energy data manually from your meter readings")
         with col_suggest2:
-            st.markdown("**🔗 Hardware Simulator**\nGenerate realistic IoT device data for testing")
+            st.markdown("**Hardware Simulator**\nGenerate realistic IoT device data for testing")
         with col_suggest3:
-            st.markdown("**🔌 MQTT/ThingsBoard**\nConnect real IoT devices or use our simulator")
+            st.markdown("**MQTT/ThingsBoard**\nConnect real IoT devices or use our simulator")
     
     # Anomaly alerts
     anomalies = st.session_state.anomaly_detector.detect_anomalies()
     if anomalies:
-        st.subheader("⚠️ Anomaly Alerts")
+        professional_subheader("Anomaly Alerts", "Unusual patterns detected in energy consumption")
         for anomaly in anomalies:
-            st.warning(f"Anomaly detected: {anomaly['message']} at {anomaly['timestamp']}")
+            professional_info_box(f"Anomaly detected: {anomaly['message']} at {anomaly['timestamp']}", "warning")
     
     # Device status
-    st.subheader("Connected Devices")
+    professional_subheader("Connected Devices", "Status of all registered IoT devices and sensors")
     devices = st.session_state.db_manager.get_device_status()
     if not devices.empty:
         for _, device in devices.iterrows():
-            status_color = "green" if device['status'] == 'online' else "red"
-            st.write(f"🔌 {device['device_name']}: :color[{status_color}][{device['status']}] - Last seen: {device['last_seen']}")
+            status_type = "online" if device['status'] == 'online' else "offline"
+            device_info = f"{device['device_name']}: {status_pill(status_type, device['status'])} - Last seen: {device['last_seen']}"
+            st.markdown(device_info, unsafe_allow_html=True)
     else:
-        st.info("No IoT devices connected. Use manual input or check MQTT configuration.")
+        professional_info_box("No IoT devices connected. Use manual input or check MQTT configuration.", "info")
 
 def analytics_page():
-    st.header("Energy Analytics")
+    professional_header("Energy Analytics", "Comprehensive analysis of historical energy consumption patterns")
     
     # Date range selector
     col1, col2 = st.columns(2)
@@ -284,7 +306,8 @@ def analytics_page():
         fig = px.bar(daily_data, x='timestamp', y='consumption', 
                     title='Daily Energy Consumption',
                     labels={'consumption': 'Consumption (kWh)', 'timestamp': 'Date'})
-        st.plotly_chart(fig, use_container_width=True)
+        fig = create_professional_chart(fig, "Daily Energy Consumption")
+        st.plotly_chart(fig, width="stretch")
         
         # Hourly patterns
         st.subheader("Hourly Usage Patterns")
@@ -303,7 +326,8 @@ def analytics_page():
             xaxis_title="Hour of Day",
             yaxis_title="Average Consumption (kWh)"
         )
-        st.plotly_chart(fig, use_container_width=True)
+        fig = create_professional_chart(fig, "Daily Energy Consumption")
+        st.plotly_chart(fig, width="stretch")
         
         # Statistics
         st.subheader("Statistics")
@@ -322,7 +346,7 @@ def analytics_page():
         st.warning("No data available for the selected date range.")
 
 def ai_recommendations_page():
-    st.header("🤖 AI-Powered Energy Recommendations")
+    professional_header("AI-Powered Energy Insights", "Intelligent recommendations for optimizing your energy consumption")
     
     # Get recent consumption data
     recent_data = st.session_state.db_manager.get_recent_energy_data(hours=168)  # Last week
@@ -357,7 +381,7 @@ def ai_recommendations_page():
         st.warning("Need at least a week of energy data to generate meaningful recommendations.")
 
 def manual_input_page():
-    st.header("📱 Manual Energy Input")
+    professional_header("Manual Data Entry", "Add energy consumption data for devices without IoT sensors")
     
     st.write("Add energy consumption data for homes without IoT sensors.")
     
@@ -404,15 +428,15 @@ def manual_input_page():
                 st.error("Please fill in all required fields.")
     
     # Show recent manual entries
-    st.subheader("Recent Manual Entries")
+    professional_subheader("Recent Manual Entries", "History of manually entered energy data")
     manual_data = st.session_state.db_manager.get_manual_entries(limit=10)
     if not manual_data.empty:
-        st.dataframe(manual_data, use_container_width=True)
+        professional_data_table(manual_data, "Recent Entries")
     else:
-        st.info("No manual entries yet.")
+        professional_info_box("No manual entries yet. Add your first energy reading above.", "info")
 
 def gamification_page():
-    st.header("🎮 Energy Saving Game")
+    professional_header("Performance Tracking", "Monitor your energy efficiency achievements and community ranking")
     
     # User profile
     user_profile = st.session_state.gamification_manager.get_user_profile()
@@ -434,10 +458,11 @@ def gamification_page():
             names=list(points_data.keys()),
             title="Points by Activity"
         )
-        st.plotly_chart(fig, use_container_width=True)
+        fig = create_professional_chart(fig, "Daily Energy Consumption")
+        st.plotly_chart(fig, width="stretch")
     
     # Leaderboard
-    st.subheader("🏆 Neighborhood Leaderboard")
+    professional_subheader("Community Leaderboard", "Top performers in your neighborhood")
     leaderboard = st.session_state.gamification_manager.get_leaderboard()
     if leaderboard:
         for i, user in enumerate(leaderboard, 1):
@@ -450,27 +475,26 @@ def gamification_page():
                 elif i == 3:
                     st.write("🥉")
                 else:
-                    st.write(f"{i}.")
+                    st.write(f"#{i}")
             with col2:
                 st.write(user['username'])
             with col3:
                 st.write(f"{user['points']} points")
     
     # Achievements
-    st.subheader("🏅 Achievements")
+    professional_subheader("Achievements", "Your earned badges and available milestones")
     achievements = st.session_state.gamification_manager.get_available_achievements()
     
     for achievement in achievements:
         earned = achievement['id'] in user_profile['achievements']
-        icon = "✅" if earned else "⏳"
-        status = "Earned" if earned else "Not Earned"
+        status = "Completed" if earned else "Available"
         
-        with st.expander(f"{icon} {achievement['name']} - {status}"):
+        with st.expander(f"{achievement['name']} - {status}"):
             st.write(achievement['description'])
             st.write(f"Points: {achievement['points']}")
     
     # Challenges
-    st.subheader("🎯 Current Challenges")
+    professional_subheader("Active Challenges", "Current goals to help you save more energy")
     challenges = st.session_state.gamification_manager.get_active_challenges()
     
     for challenge in challenges:
@@ -488,19 +512,18 @@ def gamification_page():
                     st.rerun()
 
 def neighborhood_page():
-    st.header("🏆 Neighborhood Energy Comparison")
-    st.markdown("*Compare your energy usage with neighbors and see community rankings*")
+    professional_header("Community Benchmarking", "Compare your energy usage with neighbors and see community rankings")
     
     # User profile selection
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.subheader("🏠 Your Energy Profile")
+        professional_subheader("Your Energy Profile", "Configure your household details for accurate benchmarking")
         user_name = st.text_input("Household Name", value="Your Home", help="Enter your household name for leaderboard")
         household_size = st.number_input("Household Members", min_value=1, max_value=10, value=2, help="Number of people in your household")
         home_size = st.selectbox("Home Size", ["Small (< 1000 sq ft)", "Medium (1000-2000 sq ft)", "Large (2000-3000 sq ft)", "Very Large (> 3000 sq ft)"])
     
     with col2:
-        st.subheader("🎆 Your Rank")
+        professional_subheader("Your Ranking", "Your position compared to the community")
         # Calculate user's current ranking
         daily_usage = st.session_state.data_processor.get_daily_total()
         normalized_usage = daily_usage / household_size  # kWh per person
@@ -524,12 +547,12 @@ def neighborhood_page():
         
         # Display rank with color coding
         rank_color = "green" if user_rank <= 2 else "orange" if user_rank <= 4 else "red"
-        st.metric("🏆 Your Rank", f"#{user_rank} of {len(neighborhood_data)}")
+        professional_metric_card("Your Rank", f"#{user_rank} of {len(neighborhood_data)}")
         efficiency_delta = normalized_usage - 6.5 if normalized_usage > 0 else None
-        st.metric("⚡ Usage/Person", f"{normalized_usage:.1f} kWh", delta=f"{efficiency_delta:.1f}" if efficiency_delta else None)
+        professional_metric_card("Usage/Person", f"{normalized_usage:.1f} kWh", delta=f"{efficiency_delta:.1f}" if efficiency_delta else None)
     
     # Neighborhood leaderboard
-    st.subheader("🎆 Neighborhood Leaderboard")
+    professional_subheader("Community Leaderboard", "Energy efficiency rankings for your neighborhood")
     
     leaderboard_df = pd.DataFrame(neighborhood_data)
     leaderboard_df = leaderboard_df.sort_values('normalized_kwh')
@@ -560,41 +583,40 @@ def neighborhood_page():
         showlegend=False
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     
     # Community insights
-    st.subheader("📊 Community Insights")
+    professional_subheader("Community Insights", "Key statistics and performance metrics")
     
     col1, col2, col3 = st.columns(3)
     with col1:
         avg_usage = sum(house['normalized_kwh'] for house in neighborhood_data) / len(neighborhood_data)
-        st.metric("🏠 Neighborhood Avg", f"{avg_usage:.1f} kWh/person")
+        professional_metric_card("Neighborhood Average", f"{avg_usage:.1f} kWh/person")
     
     with col2:
         best_performer = min(neighborhood_data, key=lambda x: x['normalized_kwh'])
-        st.metric("🏆 Best Performer", f"{best_performer['name']}", delta=f"{best_performer['normalized_kwh']:.1f} kWh/person")
+        professional_metric_card("Best Performer", f"{best_performer['name']}", delta=f"{best_performer['normalized_kwh']:.1f} kWh/person")
     
     with col3:
         total_savings = sum(house['daily_kwh'] for house in neighborhood_data) * ENERGY_COST_PER_KWH
-        st.metric("💰 Community Daily Cost", f"${total_savings:.2f}")
+        professional_metric_card("Community Daily Cost", f"${total_savings:.2f}")
     
     # Energy tips from top performers
-    st.subheader("💡 Tips from Top Performers")
+    professional_subheader("Best Practices", "Energy-saving tips from top-performing households")
     tips = [
-        "🌡️ **Green Family**: 'We use a programmable thermostat and set it 2°F lower in winter'",
-        "💡 **Johnson House**: 'LED bulbs everywhere + smart power strips for phantom loads'",
-        "😯 **Miller Residence**: 'We air-dry clothes and run dishwasher only when full'"
+        "**Green Family**: 'We use a programmable thermostat and set it 2°F lower in winter'",
+        "**Johnson House**: 'LED bulbs everywhere + smart power strips for phantom loads'",
+        "**Miller Residence**: 'We air-dry clothes and run dishwasher only when full'"
     ]
     
     for tip in tips:
-        st.info(tip)
+        professional_info_box(tip, "info")
 
 def hardware_simulator_page():
-    st.header("🔗 Hardware Simulator Guide")
-    st.markdown("*Generate realistic IoT energy data and connect to ThingsBoard*")
+    professional_header("Device Simulator", "Generate realistic IoT energy data and connect to ThingsBoard")
     
     # Quick setup tabs
-    tab1, tab2, tab3 = st.tabs(["🚀 Quick Start", "🔧 Configuration", "📊 Live Data"])
+    tab1, tab2, tab3 = st.tabs(["Quick Start", "Configuration", "Live Data"])
     
     with tab1:
         st.subheader("🚀 Get Started in 3 Steps")
@@ -648,8 +670,8 @@ def hardware_simulator_page():
         with col_sim2:
             if st.button("🚀 Start Simulator", type="primary"):
                 if access_token and all_selected_devices:
-                    st.success("🎉 Simulator Started!")
-                    st.info(f"📊 Simulating {len(all_selected_devices)} devices every {sim_interval}s")
+                    st.success("Simulator Started!")
+                    st.info(f"Simulating {len(all_selected_devices)} devices every {sim_interval}s")
                     
                     # Show sample command
                     st.code(f"""# Sample data being sent to ThingsBoard:
@@ -661,7 +683,7 @@ def hardware_simulator_page():
     "status": "online"
 }}""")
                 else:
-                    st.error("⚠️ Please provide access token and select devices")
+                    st.error("Please provide access token and select devices")
     
     with tab2:
         st.subheader("🔧 Advanced Configuration")
@@ -680,15 +702,15 @@ def hardware_simulator_page():
         }
         
         profiles_df = pd.DataFrame(profiles_data)
-        st.dataframe(profiles_df, use_container_width=True)
+        st.dataframe(profiles_df, width="stretch")
         
         st.markdown("""
         ### Simulation Features
-        - ✨ **Realistic Patterns**: Peak/off-peak usage based on typical home behavior
-        - 🌡️ **Seasonal Variations**: Higher usage in winter/summer months
-        - 🔄 **Device Cycles**: Washing machines, dishwashers have realistic on/off cycles
-        - 🏠 **Weekend/Weekday**: Different patterns for work vs. home days
-        - 📊 **Random Variance**: Natural fluctuations in energy consumption
+        - **Realistic Patterns**: Peak/off-peak usage based on typical home behavior
+        - **Seasonal Variations**: Higher usage in winter/summer months
+        - **Device Cycles**: Washing machines, dishwashers have realistic on/off cycles
+        - **Weekend/Weekday**: Different patterns for work vs. home days
+        - **Random Variance**: Natural fluctuations in energy consumption
         """)
         
         # Manual simulation controls
@@ -758,19 +780,20 @@ def hardware_simulator_page():
                     height=400
                 )
                 
-                st.plotly_chart(fig, use_container_width=True)
+                fig = create_professional_chart(fig, "Live Device Simulation Data")
+                st.plotly_chart(fig, width="stretch")
                 
                 # Data table
-                st.subheader("📄 Raw Data Table")
+                professional_subheader("Raw Data Table", "Recent telemetry data from connected devices")
                 display_data = tb_data[['timestamp', 'device_name', 'consumption', 'source']].head(20)
-                st.dataframe(display_data, use_container_width=True)
+                professional_data_table(display_data)
             else:
-                st.info("📊 No simulated data found. Start the hardware simulator to see live data.")
+                professional_info_box("No simulated data found. Start the hardware simulator to see live data.", "info")
         else:
-            st.warning("🚨 No recent data available. Check your connections or start simulation.")
+            professional_info_box("No recent data available. Check your connections or start simulation.", "warning")
         
         # Manual sync button
-        if st.button("🔄 Sync Now"):
+        if st.button("Sync Now", type="primary"):
             with st.spinner("Syncing data..."):
                 result = st.session_state.thingsboard_sync.perform_sync()
                 if result['success']:
@@ -780,7 +803,7 @@ def hardware_simulator_page():
                     st.error(f"Sync failed: {result.get('error')}")
 
 def settings_page():
-    st.header("⚙️ Settings")
+    professional_header("System Settings", "Configure MQTT, ThingsBoard, and notification preferences")
     
     # MQTT Settings
     st.subheader("MQTT Configuration")
