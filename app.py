@@ -2,10 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import time
 import threading
 import json
+import random
 
 from config import *
 from database import DatabaseManager
@@ -523,7 +525,8 @@ def neighborhood_page():
         # Display rank with color coding
         rank_color = "green" if user_rank <= 2 else "orange" if user_rank <= 4 else "red"
         st.metric("🏆 Your Rank", f"#{user_rank} of {len(neighborhood_data)}")
-        st.metric("⚡ Usage/Person", f"{normalized_usage:.1f} kWh", delta=f"{normalized_usage - 6.5:.1f}" if normalized_usage > 0 else None)
+        efficiency_delta = normalized_usage - 6.5 if normalized_usage > 0 else None
+        st.metric("⚡ Usage/Person", f"{normalized_usage:.1f} kWh", delta=f"{efficiency_delta:.1f}" if efficiency_delta else None)
     
     # Neighborhood leaderboard
     st.subheader("🎆 Neighborhood Leaderboard")
