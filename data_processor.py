@@ -12,7 +12,7 @@ class DataProcessor:
     def __init__(self):
         self.db_manager = DatabaseManager()
         self._cache = {}
-        self._cache_timeout = timedelta(minutes=5)  # Cache data for 5 minutes
+        self._cache_timeout = timedelta(minutes=1)  # Cache data for 1 minute
         self._last_cache_update = {}
     
     def get_current_consumption(self) -> float:
@@ -470,6 +470,19 @@ class DataProcessor:
         except Exception as e:
             print(f"Error detecting usage trends: {e}")
             return {'trends': [], 'summary': 'Error analyzing usage trends'}
+    
+    def _is_cache_valid(self, cache_key: str) -> bool:
+        """Check if cache entry is still valid"""
+        if cache_key not in self._cache or cache_key not in self._last_cache_update:
+            return False
+        
+        time_elapsed = datetime.now() - self._last_cache_update[cache_key]
+        return time_elapsed < self._cache_timeout
+    
+    def clear_cache(self):
+        """Clear all cached data to force refresh"""
+        self._cache.clear()
+        self._last_cache_update.clear()
     
     def get_cost_analysis(self, days_back: int = 30) -> Dict[str, Any]:
         """Get detailed cost analysis"""

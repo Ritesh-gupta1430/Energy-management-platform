@@ -257,6 +257,9 @@ def manual_input_page():
                 if success:
                     st.success(f"Added {consumption} kWh for {device_name} at {timestamp}")
                     
+                    # Clear cache to refresh dashboard metrics immediately
+                    st.session_state.data_processor.clear_cache()
+                    
                     # Award points for manual input
                     st.session_state.gamification_manager.add_points('manual_input', 10)
                     
