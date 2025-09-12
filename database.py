@@ -317,10 +317,14 @@ class DatabaseManager:
             print(f"Error getting recent recommendations: {e}")
             return pd.DataFrame()
     
-    def add_anomaly(self, device_name: str, anomaly_type: str, message: str, timestamp: datetime = None, severity: str = 'medium') -> bool:
+    def add_anomaly(self, device_name: str, anomaly_type: str, message: str, timestamp: Optional[datetime] = None, severity: str = 'medium') -> bool:
         """Add anomaly detection result"""
         if timestamp is None:
             timestamp = datetime.now()
+        
+        # Convert pandas Timestamp to Python datetime if needed
+        if hasattr(timestamp, 'to_pydatetime'):
+            timestamp = timestamp.to_pydatetime()
         
         try:
             with self.lock:
@@ -330,7 +334,7 @@ class DatabaseManager:
                 cursor.execute("""
                     INSERT INTO anomalies (device_name, anomaly_type, message, timestamp, severity)
                     VALUES (?, ?, ?, ?, ?)
-                """, (device_name, anomaly_type, message, timestamp, severity))
+                """, (device_name, anomaly_type, message, timestamp.isoformat(), severity))
                 
                 conn.commit()
                 conn.close()
