@@ -16,7 +16,8 @@ MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX", "energy")
 
 # ThingsBoard Configuration
 THINGSBOARD_HOST = os.getenv("THINGSBOARD_HOST", "demo.thingsboard.io")
-THINGSBOARD_PORT = int(os.getenv("THINGSBOARD_PORT", "80"))
+THINGSBOARD_PORT = int(os.getenv("THINGSBOARD_PORT", "443"))
+THINGSBOARD_USE_SSL = os.getenv("THINGSBOARD_USE_SSL", "true").lower() == "true"
 THINGSBOARD_ACCESS_TOKEN = os.getenv("THINGSBOARD_ACCESS_TOKEN", "")
 
 # OpenAI Configuration

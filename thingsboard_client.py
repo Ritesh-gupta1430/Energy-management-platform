@@ -5,16 +5,18 @@ from typing import Dict, Any, List, Optional
 import time
 import threading
 
-from config import THINGSBOARD_HOST, THINGSBOARD_PORT, THINGSBOARD_ACCESS_TOKEN
+from config import THINGSBOARD_HOST, THINGSBOARD_PORT, THINGSBOARD_ACCESS_TOKEN, THINGSBOARD_USE_SSL
 
 class ThingsBoardClient:
-    def __init__(self, host: str = None, port: int = None, access_token: str = None):
+    def __init__(self, host: str = None, port: int = None, access_token: str = None, use_ssl: bool = None):
         self.host = host or THINGSBOARD_HOST
         self.port = port or THINGSBOARD_PORT
         self.access_token = access_token or THINGSBOARD_ACCESS_TOKEN
+        self.use_ssl = use_ssl if use_ssl is not None else THINGSBOARD_USE_SSL
         
         # Construct base URL
-        self.base_url = f"http://{self.host}:{self.port}"
+        protocol = "https" if self.use_ssl else "http"
+        self.base_url = f"{protocol}://{self.host}:{self.port}"
         self.api_url = f"{self.base_url}/api/v1"
         
         # Session for connection pooling
@@ -42,17 +44,23 @@ class ThingsBoardClient:
                 self.connected = False
                 return False
             
-            # Test connection by getting device info
+            # Test connection by sending a simple telemetry test
             url = f"{self.api_url}/{self.access_token}/telemetry"
-            response = self.session.get(url, timeout=5)
+            test_data = {"test_connection": True, "timestamp": int(datetime.now().timestamp() * 1000)}
             
-            self.connected = response.status_code in [200, 404]  # 404 is OK if no data
+            response = self.session.post(
+                url, 
+                data=json.dumps(test_data),
+                timeout=5
+            )
+            
+            self.connected = response.status_code == 200
             self.last_connection_check = datetime.now()
             
             if self.connected:
                 print("ThingsBoard connection successful")
             else:
-                print(f"ThingsBoard connection failed: HTTP {response.status_code}")
+                print(f"ThingsBoard connection failed: HTTP {response.status_code} - {response.text}")
             
             return self.connected
             
