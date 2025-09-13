@@ -12,7 +12,6 @@ class DatabaseManager:
         self.init_database()
     
     def init_database(self):
-        """Initialize database with all required tables"""
         with self.lock:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()

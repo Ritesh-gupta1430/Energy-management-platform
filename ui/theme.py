@@ -1,32 +1,26 @@
-"""
-Professional Design System for Energy Management Platform
-Enterprise-grade color tokens, typography, and spacing constants.
-"""
-
-# Color Tokens - Enterprise Blue Palette
 COLORS = {
     # Primary colors
     'primary': '#1f77b4',
     'primary_dark': '#1a629c',
     'primary_light': '#e3f2fd',
-    
+
     # Secondary colors
     'secondary': '#6c757d',
     'secondary_light': '#f8f9fa',
-    
+
     # Status colors
     'success': '#28a745',
     'warning': '#ffc107',
     'danger': '#dc3545',
     'info': '#17a2b8',
-    
+
     # Neutral colors
     'white': '#ffffff',
     'light_gray': '#f8f9fa',
     'medium_gray': '#6c757d',
     'dark_gray': '#343a40',
     'black': '#000000',
-    
+
     # Border colors
     'border_light': '#e9ecef',
     'border_medium': '#dee2e6',
@@ -195,9 +189,9 @@ CHART_COLORS = [
     COLORS['success'],
     COLORS['info'],
     COLORS['warning'],
-    '#8c564b',  # Brown
-    '#e377c2',  # Pink
-    '#7f7f7f',  # Gray
-    '#bcbd22',  # Olive
-    '#17becf'   # Cyan
+    '#8c564b',
+    '#e377c2',
+    '#7f7f7f',
+    '#bcbd22',
+    '#17becf'
 ]

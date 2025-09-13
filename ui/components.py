@@ -1,26 +1,12 @@
-"""
-Professional UI Components for Energy Management Platform
-Reusable enterprise-grade components with consistent styling.
-"""
-
 import streamlit as st
 import plotly.graph_objects as go
 from typing import Optional, Dict, Any, List
 from .theme import COLORS, TYPOGRAPHY, SPACING, get_professional_css, CHART_COLORS
 
 def apply_professional_theme():
-    """Apply professional CSS theme to the entire application"""
     st.markdown(get_professional_css(), unsafe_allow_html=True)
 
 def professional_header(title: str, subtitle: Optional[str] = None, icon: Optional[str] = None):
-    """
-    Create a professional page header with optional subtitle and icon
-    
-    Args:
-        title: Main header text
-        subtitle: Optional subtitle text
-        icon: Optional icon (simple text/symbol, not emoji)
-    """
     header_html = f"""
     <div class="main-content" style="margin-bottom: {SPACING['lg']};">
         <h1 style="
@@ -45,13 +31,6 @@ def professional_header(title: str, subtitle: Optional[str] = None, icon: Option
     st.markdown(header_html, unsafe_allow_html=True)
 
 def professional_subheader(title: str, description: Optional[str] = None):
-    """
-    Create a professional section subheader
-    
-    Args:
-        title: Section title
-        description: Optional description text
-    """
     subheader_html = f"""
     <div style="
         margin: {SPACING['xl']} 0 {SPACING['lg']} 0;
@@ -78,11 +57,11 @@ def professional_subheader(title: str, description: Optional[str] = None):
 def status_pill(status: str, label: str) -> str:
     """
     Create a professional status pill
-    
+
     Args:
         status: Status type ('online', 'offline', 'warning', 'info')
         label: Text to display in pill
-    
+
     Returns:
         HTML string for status pill
     """
