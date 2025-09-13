@@ -1,0 +1,43 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.env
+.env.example
+
+# Python environment folders
+.venv/
+venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# SQLite database
+energy_tracker.db
+
+# Streamlit specific files
+.streamlit/
+
+# Lock files
+*.lock
+
+# VS Code settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other
+*.bak
+*.swp
